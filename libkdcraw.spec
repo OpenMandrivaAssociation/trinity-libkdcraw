@@ -1,12 +1,12 @@
-#
-# Please submit bugfixes or comments via http://www.trinitydesktop.org/
-#
+%bcond clang 1
 
 # TDE variables
 %define tde_epoch 2
 %if "%{?tde_version}" == ""
 %define tde_version 14.1.5
 %endif
+%define pkg_rel 2
+
 %define tde_pkg libkdcraw
 %define tde_prefix /opt/trinity
 %define tde_datadir %{tde_prefix}/share
@@ -14,53 +14,55 @@
 %define tde_tdeincludedir %{tde_includedir}/tde
 %define tde_libdir %{tde_prefix}/%{_lib}
 
-%if 0%{?mdkversion} || 0%{?mgaversion} || 0%{?pclinuxos}
 %define libkdcraw %{_lib}kdcraw
-%else
-%define libkdcraw libkdcraw
-%endif
 
-%if 0%{?mdkversion}
 %undefine __brp_remove_la_files
 %define dont_remove_libtool_files 1
 %define _disable_rebuild_configure 1
-%endif
 
 # fixes error: Empty %files file …/debugsourcefiles.list
 %define _debugsource_template %{nil}
 
 %define tarball_name %{tde_pkg}-trinity
-%global toolchain %(readlink /usr/bin/cc)
 
 
 Name:		trinity-%{tde_pkg}
 Epoch:		%{tde_epoch}
 Version:	0.1.9
-Release:	%{?tde_version}_%{?!preversion:1}%{?preversion:0_%{preversion}}%{?dist}
+Release:	%{?tde_version}_%{?!preversion:%{pkg_rel}}%{?preversion:0_%{preversion}}%{?dist}
 Summary:	Raw picture decoding C++ library (runtime) [Trinity]
 Group:		System/Libraries
 URL:		http://www.trinitydesktop.org/
 
-%if 0%{?suse_version}
-License:	GPL-2.0+
-%else
 License:	GPLv2+
-%endif
 
 #Vendor:		Trinity Desktop
 #Packager:	Francois Andriot <francois.andriot@free.fr>
 
 Source0:		https://mirror.ppa.trinitydesktop.org/trinity/releases/R%{tde_version}/main/libraries/%{tarball_name}-%{tde_version}%{?preversion:~%{preversion}}.tar.xz
 
-BuildRequires:  cmake make
+BuildSystem:    cmake
+BuildOption:    -DCMAKE_BUILD_TYPE="RelWithDebInfo"
+BuildOption:    -DCMAKE_SKIP_RPATH=OFF
+BuildOption:    -DCMAKE_SKIP_INSTALL_RPATH=OFF
+BuildOption:    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+BuildOption:    -DCMAKE_INSTALL_RPATH="%{tde_libdir}"
+BuildOption:    -DCMAKE_INSTALL_PREFIX="%{tde_prefix}"
+BuildOption:    -DSHARE_INSTALL_PREFIX="%{tde_datadir}"
+BuildOption:    -DLIB_INSTALL_DIR="%{tde_libdir}"
+BuildOption:    -DINCLUDE_INSTALL_DIR=%{tde_tdeincludedir}
+BuildOption:    -DPLUGIN_INSTALL_DIR="%{tde_tdelibdir}"
+BuildOption:    -DWITH_ALL_OPTIONS=ON -DBUILD_ALL=ON -DBUILD_DOC=ON
+BuildOption:    -DBUILD_TRANSLATIONS=ON
+
 BuildRequires:	trinity-tde-cmake >= %{tde_version}
 BuildRequires:	trinity-tdelibs-devel >= %{tde_version}
 BuildRequires:	trinity-filesystem >= %{tde_version}
 
 BuildRequires: libtool
-%if "%{?toolchain}" != "clang"
-BuildRequires: gcc-c++
-%endif
+
+%{!?with_clang:BuildRequires: gcc-c++}
+
 BuildRequires: desktop-file-utils
 BuildRequires: pkgconfig
 BuildRequires: gettext
@@ -77,12 +79,7 @@ BuildRequires:  pkgconfig(ice)
 BuildRequires:  pkgconfig(sm)
 
 # AUTOTOOLS
-%if 0%{?mgaversion} || 0%{?mdkversion}
 BuildRequires:	%{_lib}ltdl-devel
-%endif
-%if 0%{?fedora} || 0%{?rhel} >= 5 || 0%{?suse_version} >= 1220
-BuildRequires:	libtool-ltdl-devel
-%endif
 
 %description
 C++ interface around dcraw binary program used to decode RAW
@@ -151,64 +148,13 @@ library documentation is available on kdcraw.h header file.
 %{tde_tdeincludedir}/libkdcraw/
 %{tde_libdir}/pkgconfig/libkdcraw.pc
 
-##########
 
-%if 0%{?suse_version} && 0%{?opensuse_bs} == 0
-%debug_package
-%endif
-
-##########
-
-%prep
-%autosetup -n %{tarball_name}-%{tde_version}%{?preversion:~%{preversion}}
-
-
-%build
+%conf -p
 unset QTDIR QTINC QTLIB
 export PATH="%{tde_bindir}:${PATH}"
 export PKG_CONFIG_PATH="%{tde_libdir}/pkgconfig"
 
-if ! rpm -E %%cmake|grep -e 'cd build\|cd ${CMAKE_BUILD_DIR:-build}'; then
-  %__mkdir_p build
-  cd build
-fi
 
-%cmake \
-  -DCMAKE_BUILD_TYPE="RelWithDebInfo" \
-  -DCMAKE_C_FLAGS="${RPM_OPT_FLAGS}" \
-  -DCMAKE_CXX_FLAGS="${RPM_OPT_FLAGS}" \
-  -DCMAKE_SKIP_RPATH=OFF \
-  -DCMAKE_SKIP_INSTALL_RPATH=OFF \
-  -DCMAKE_INSTALL_RPATH="%{tde_libdir}" \
-  -DCMAKE_VERBOSE_MAKEFILE=ON \
-  -DWITH_GCC_VISIBILITY=OFF \
-  \
-  -DCMAKE_INSTALL_PREFIX="%{tde_prefix}" \
-  -DSHARE_INSTALL_PREFIX="%{tde_datadir}" \
-  -DLIB_INSTALL_DIR="%{tde_libdir}" \
-  -DINCLUDE_INSTALL_DIR=%{tde_tdeincludedir} \
-  -DPLUGIN_INSTALL_DIR="%{tde_tdelibdir}" \
-  \
-  -DWITH_ALL_OPTIONS=ON \
-  -DWITH_GCC_VISIBILITY=ON \
-  \
-  -DBUILD_ALL=ON \
-  -DBUILD_DOC=ON \
-  -DBUILD_TRANSLATIONS=ON \
-  \
-  ..
-
-%__make %{?_smp_mflags} || %__make
-
-
-%install
-export PATH="%{tde_bindir}:${PATH}"
-%__make install DESTDIR=%{buildroot} -C build
-
+%install -a
 %find_lang %{tde_pkg}
-
-# RHEL4: pkgconfig files do not support 'URL' keyword .
-%if 0%{?rhel} == 4
-%__sed -i %{?buildroot}%{tde_libdir}/pkgconfig/*.pc -e "s/^URL: /#URL: /"
-%endif
 
