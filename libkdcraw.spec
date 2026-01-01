@@ -8,11 +8,6 @@
 %define pkg_rel 2
 
 %define tde_pkg libkdcraw
-%define tde_prefix /opt/trinity
-%define tde_datadir %{tde_prefix}/share
-%define tde_includedir %{tde_prefix}/include
-%define tde_tdeincludedir %{tde_includedir}/tde
-%define tde_libdir %{tde_prefix}/%{_lib}
 
 %define libkdcraw %{_lib}kdcraw
 
@@ -36,8 +31,7 @@ URL:		http://www.trinitydesktop.org/
 
 License:	GPLv2+
 
-#Vendor:		Trinity Desktop
-#Packager:	Francois Andriot <francois.andriot@free.fr>
+Prefix:    /opt/trinity
 
 Source0:		https://mirror.ppa.trinitydesktop.org/trinity/releases/R%{tde_version}/main/libraries/%{tarball_name}-%{tde_version}%{?preversion:~%{preversion}}.tar.xz
 
@@ -46,14 +40,15 @@ BuildOption:    -DCMAKE_BUILD_TYPE="RelWithDebInfo"
 BuildOption:    -DCMAKE_SKIP_RPATH=OFF
 BuildOption:    -DCMAKE_SKIP_INSTALL_RPATH=OFF
 BuildOption:    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
-BuildOption:    -DCMAKE_INSTALL_RPATH="%{tde_libdir}"
-BuildOption:    -DCMAKE_INSTALL_PREFIX="%{tde_prefix}"
-BuildOption:    -DSHARE_INSTALL_PREFIX="%{tde_datadir}"
-BuildOption:    -DLIB_INSTALL_DIR="%{tde_libdir}"
-BuildOption:    -DINCLUDE_INSTALL_DIR=%{tde_tdeincludedir}
-BuildOption:    -DPLUGIN_INSTALL_DIR="%{tde_tdelibdir}"
+BuildOption:    -DCMAKE_INSTALL_RPATH="%{prefix}/%{_lib}"
+BuildOption:    -DCMAKE_INSTALL_PREFIX="%{prefix}"
+BuildOption:    -DSHARE_INSTALL_PREFIX="%{prefix}/share"
+BuildOption:    -DLIB_INSTALL_DIR="%{prefix}/%{_lib}"
+BuildOption:    -DINCLUDE_INSTALL_DIR=%{prefix}/include/tde
+BuildOption:    -DPLUGIN_INSTALL_DIR="%{prefix}/%{_lib}/trinity"
 BuildOption:    -DWITH_ALL_OPTIONS=ON -DBUILD_ALL=ON -DBUILD_DOC=ON
 BuildOption:    -DBUILD_TRANSLATIONS=ON
+BuildOption:    -DWITH_GCC_VISIBILITY=%{!?with_clang:ON}%{?with_clang:OFF}
 
 BuildRequires:	trinity-tde-cmake >= %{tde_version}
 BuildRequires:	trinity-tdelibs-devel >= %{tde_version}
@@ -105,8 +100,8 @@ libkdcraw contains the library of libkdcraw.
 
 %files -n trinity-%{libkdcraw}4
 %defattr(-,root,root,-)
-%{tde_libdir}/libkdcraw.so.4
-%{tde_libdir}/libkdcraw.so.4.0.3
+%{prefix}/%{_lib}/libkdcraw.so.4
+%{prefix}/%{_lib}/libkdcraw.so.4.0.3
 
 ##########
 
@@ -123,7 +118,7 @@ libkdcraw contains the library of libkdcraw.
 
 %files -n trinity-libkdcraw-common -f %{tde_pkg}.lang
 %defattr(-,root,root,-)
-%{tde_datadir}/icons/hicolor/*/apps/kdcraw.png
+%{prefix}/share/icons/hicolor/*/apps/kdcraw.png
 
 ##########
 
@@ -143,16 +138,16 @@ library documentation is available on kdcraw.h header file.
 
 %files -n trinity-%{libkdcraw}-devel
 %defattr(-,root,root,-)
-%{tde_libdir}/libkdcraw.so
-%{tde_libdir}/libkdcraw.la
-%{tde_tdeincludedir}/libkdcraw/
-%{tde_libdir}/pkgconfig/libkdcraw.pc
+%{prefix}/%{_lib}/libkdcraw.so
+%{prefix}/%{_lib}/libkdcraw.la
+%{prefix}/include/tde/libkdcraw/
+%{prefix}/%{_lib}/pkgconfig/libkdcraw.pc
 
 
 %conf -p
 unset QTDIR QTINC QTLIB
 export PATH="%{tde_bindir}:${PATH}"
-export PKG_CONFIG_PATH="%{tde_libdir}/pkgconfig"
+export PKG_CONFIG_PATH="%{prefix}/%{_lib}/pkgconfig"
 
 
 %install -a
