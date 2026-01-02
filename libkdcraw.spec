@@ -5,9 +5,11 @@
 %if "%{?tde_version}" == ""
 %define tde_version 14.1.5
 %endif
-%define pkg_rel 2
+%define pkg_rel 3
 
 %define tde_pkg libkdcraw
+
+%define tde_prefix /opt/trinity
 
 %define libkdcraw %{_lib}kdcraw
 
@@ -40,12 +42,12 @@ BuildOption:    -DCMAKE_BUILD_TYPE="RelWithDebInfo"
 BuildOption:    -DCMAKE_SKIP_RPATH=OFF
 BuildOption:    -DCMAKE_SKIP_INSTALL_RPATH=OFF
 BuildOption:    -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
-BuildOption:    -DCMAKE_INSTALL_RPATH="%{prefix}/%{_lib}"
-BuildOption:    -DCMAKE_INSTALL_PREFIX="%{prefix}"
-BuildOption:    -DSHARE_INSTALL_PREFIX="%{prefix}/share"
-BuildOption:    -DLIB_INSTALL_DIR="%{prefix}/%{_lib}"
-BuildOption:    -DINCLUDE_INSTALL_DIR=%{prefix}/include/tde
-BuildOption:    -DPLUGIN_INSTALL_DIR="%{prefix}/%{_lib}/trinity"
+BuildOption:    -DCMAKE_INSTALL_RPATH="%{tde_prefix}/%{_lib}"
+BuildOption:    -DCMAKE_INSTALL_PREFIX="%{tde_prefix}"
+BuildOption:    -DSHARE_INSTALL_PREFIX="%{tde_prefix}/share"
+BuildOption:    -DLIB_INSTALL_DIR="%{tde_prefix}/%{_lib}"
+BuildOption:    -DINCLUDE_INSTALL_DIR=%{tde_prefix}/include/tde
+BuildOption:    -DPLUGIN_INSTALL_DIR="%{tde_prefix}/%{_lib}/trinity"
 BuildOption:    -DWITH_ALL_OPTIONS=ON -DBUILD_ALL=ON -DBUILD_DOC=ON
 BuildOption:    -DBUILD_TRANSLATIONS=ON
 BuildOption:    -DWITH_GCC_VISIBILITY=%{!?with_clang:ON}%{?with_clang:OFF}
@@ -100,8 +102,8 @@ libkdcraw contains the library of libkdcraw.
 
 %files -n trinity-%{libkdcraw}4
 %defattr(-,root,root,-)
-%{prefix}/%{_lib}/libkdcraw.so.4
-%{prefix}/%{_lib}/libkdcraw.so.4.0.3
+%{tde_prefix}/%{_lib}/libkdcraw.so.4
+%{tde_prefix}/%{_lib}/libkdcraw.so.4.0.3
 
 ##########
 
@@ -118,7 +120,7 @@ libkdcraw contains the library of libkdcraw.
 
 %files -n trinity-libkdcraw-common -f %{tde_pkg}.lang
 %defattr(-,root,root,-)
-%{prefix}/share/icons/hicolor/*/apps/kdcraw.png
+%{tde_prefix}/share/icons/hicolor/*/apps/kdcraw.png
 
 ##########
 
@@ -138,16 +140,16 @@ library documentation is available on kdcraw.h header file.
 
 %files -n trinity-%{libkdcraw}-devel
 %defattr(-,root,root,-)
-%{prefix}/%{_lib}/libkdcraw.so
-%{prefix}/%{_lib}/libkdcraw.la
-%{prefix}/include/tde/libkdcraw/
-%{prefix}/%{_lib}/pkgconfig/libkdcraw.pc
+%{tde_prefix}/%{_lib}/libkdcraw.so
+%{tde_prefix}/%{_lib}/libkdcraw.la
+%{tde_prefix}/include/tde/libkdcraw/
+%{tde_prefix}/%{_lib}/pkgconfig/libkdcraw.pc
 
 
 %conf -p
 unset QTDIR QTINC QTLIB
 export PATH="%{tde_bindir}:${PATH}"
-export PKG_CONFIG_PATH="%{prefix}/%{_lib}/pkgconfig"
+export PKG_CONFIG_PATH="%{tde_prefix}/%{_lib}/pkgconfig"
 
 
 %install -a
